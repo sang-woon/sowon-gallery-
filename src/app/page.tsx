@@ -7,6 +7,7 @@ import SearchBar from '@/components/gallery/SearchBar';
 import { useImages } from '@/hooks/useImages';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useLocalStats } from '@/hooks/useLocalStats';
+import { getImageUrl } from '@/lib/supabase';
 import type { FilterState } from '@/types';
 
 const initialFilters: FilterState = {
@@ -47,6 +48,15 @@ export default function Home() {
     });
     return counts;
   }, [allImages]);
+
+  // Get popular images for the showcase section
+  const popularImages = useMemo(() => {
+    const popularIds = getPopularImageIds(10);
+    const popular = allImages.filter((img) => popularIds.includes(img.id));
+    return popular.sort((a, b) => {
+      return popularIds.indexOf(a.id) - popularIds.indexOf(b.id);
+    });
+  }, [allImages, getPopularImageIds]);
 
   // Filter images based on special filter (popular/favorites)
   const filteredImages = useMemo(() => {
@@ -96,6 +106,48 @@ export default function Home() {
         value={filters.search}
         onChange={(value) => handleFilterChange('search', value)}
       />
+
+      {/* Popular Images Section */}
+      {popularImages.length > 0 && !filters.specialFilter && (
+        <div className="mb-8 bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <span className="text-2xl">🔥</span>
+              인기 이미지
+            </h2>
+            <button
+              onClick={() => handleFilterChange('specialFilter', 'popular')}
+              className="text-sm text-orange-600 hover:text-orange-700 font-medium hover:underline"
+            >
+              전체보기 →
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {popularImages.slice(0, 5).map((img) => (
+              <div
+                key={img.id}
+                className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                onClick={() => {
+                  // You can add lightbox functionality here if needed
+                }}
+              >
+                <img
+                  src={getImageUrl(img.file_path)}
+                  alt={img.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <p className="text-white text-sm font-medium truncate">
+                      {img.title}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <FilterPanel
         filters={filters}
