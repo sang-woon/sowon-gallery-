@@ -140,7 +140,7 @@ export default function ImageCard({ image, onImageClick }: ImageCardProps) {
         {/* Copy button */}
         <button
           onClick={handleCopyImage}
-          className="absolute bottom-2 right-2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+          className="absolute bottom-2 right-2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:scale-110"
           title="이미지 복사"
         >
           {isCopied ? (
