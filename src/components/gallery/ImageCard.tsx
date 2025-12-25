@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Copy, Check } from 'lucide-react';
 import { getImageUrl } from '@/lib/supabase';
 import { TAG_OPTIONS } from '@/lib/constants';
+import { formatDate } from '@/lib/utils';
 import type { Image } from '@/types';
 
 interface ImageCardProps {
@@ -15,6 +16,7 @@ export default function ImageCard({ image, onImageClick }: ImageCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const imageUrl = getImageUrl(image.file_path);
@@ -61,6 +63,27 @@ export default function ImageCard({ image, onImageClick }: ImageCardProps) {
 
   const handleImageLoad = () => {
     setImageLoaded(true);
+  };
+
+  const handleCopyImage = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening lightbox
+
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob,
+        }),
+      ]);
+
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy image:', error);
+      alert('이미지 복사에 실패했습니다.');
+    }
   };
 
   return (
@@ -114,6 +137,19 @@ export default function ImageCard({ image, onImageClick }: ImageCardProps) {
         {/* Overlay on hover */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300" />
 
+        {/* Copy button */}
+        <button
+          onClick={handleCopyImage}
+          className="absolute bottom-2 right-2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+          title="이미지 복사"
+        >
+          {isCopied ? (
+            <Check className="w-4 h-4 text-green-600" />
+          ) : (
+            <Copy className="w-4 h-4 text-gray-700" />
+          )}
+        </button>
+
         {/* Character badge */}
         {characterLabel && (
           <span className="absolute top-2 left-2 px-2 py-1 bg-primary-600 text-white text-xs font-medium rounded-full">
@@ -140,6 +176,9 @@ export default function ImageCard({ image, onImageClick }: ImageCardProps) {
             {image.description}
           </p>
         )}
+        <p className="text-xs text-gray-400 mt-2">
+          {formatDate(image.created_at)}
+        </p>
       </div>
     </div>
   );
